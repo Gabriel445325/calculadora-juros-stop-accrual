@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Juros com Stop Accrual - Resolução CMN 4966</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #16213e;
+            border-radius: 24px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(59, 130, 246, 0.1);
+            overflow: hidden;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 12px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 15px;
+            opacity: 0.95;
+            font-weight: 400;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .form-section {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 32px;
+            border-radius: 16px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .form-section:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 6px 30px rgba(99, 102, 241, 0.15);
+        }
+
+        .form-section h2 {
+            color: #a5b4fc;
+            margin-bottom: 24px;
+            font-size: 22px;
+            font-weight: 600;
+            border-bottom: 2px solid rgba(99, 102, 241, 0.3);
+            padding-bottom: 12px;
+            letter-spacing: -0.3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+        }
+
+        .form-section h2:hover {
+            color: #c4b5fd;
+        }
+
+        .section-toggle {
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #a5b4fc;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            font-size: 16px;
+            flex-shrink: 0;
+            margin-left: 12px;
+        }
+
+        .section-toggle:hover {
+            background: rgba(99, 102, 241, 0.3);
+            transform: scale(1.1);
+        }
+
+        .section-content {
+            transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease, padding 0.3s ease;
+            overflow: hidden;
+            max-height: 5000px;
+            opacity: 1;
+        }
+
+        .section-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: #a5b4fc;
+            font-size: 13px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .form-group input {
+            padding: 14px 16px;
+            border: 1.5px solid rgba(99, 102, 241, 0.2);
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(15, 23, 42, 0.6);
+            color: #f1f5f9;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-group input:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15), 0 4px 12px rgba(99, 102, 241, 0.1);
+            background: rgba(15, 23, 42, 0.9);
+        }
+
+        .payments-section {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .payments-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: #1e293b;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #8b5cf6;
+        }
+
+        .payments-table thead {
+            background: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 100%);
+            color: white;
+        }
+
+        .payments-table th {
+            padding: 12px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .payments-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #334155;
+            font-size: 13px;
+            color: #e0e0e0;
+        }
+
+        .payments-table tr:hover {
+            background: #334155;
+        }
+
+        .payments-table tr.paid {
+            background: #064e3b;
+        }
+
+        .payments-table tr.early {
+            background: #1e3a8a;
+        }
+
+        .payments-table tr.late {
+            background: #78350f;
+        }
+
+        .payment-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .payment-date-input {
+            padding: 6px;
+            border: 1px solid #4c1d95;
+            border-radius: 4px;
+            font-size: 12px;
+            width: 130px;
+            background: #0f172a;
+            color: #e0e0e0;
+        }
+
+        .payment-date-input:disabled {
+            background: #1e293b;
+            cursor: not-allowed;
+        }
+
+        .payment-type-select {
+            padding: 6px;
+            border: 1px solid #4c1d95;
+            border-radius: 4px;
+            font-size: 12px;
+            width: 140px;
+            background: #0f172a;
+            color: #e0e0e0;
+        }
+
+        .installment-number {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: white;
+            border: none;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #047857 0%, #059669 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            color: white;
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+        }
+
+        .btn-secondary {
+            background: #475569;
+            color: white;
+            border: none;
+        }
+
+        .btn-secondary:hover {
+            background: #334155;
+        }
+
+        .results-section {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.9) 0%, rgba(129, 140, 248, 0.9) 50%, rgba(165, 180, 252, 0.9) 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card:nth-child(1) {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.9) 0%, rgba(129, 140, 248, 0.9) 100%);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25);
+        }
+
+        .summary-card:nth-child(2) {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.9) 0%, rgba(52, 211, 153, 0.9) 100%);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
+        }
+
+        .summary-card:nth-child(3) {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(96, 165, 250, 0.9) 100%);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.25);
+        }
+
+        .summary-card:nth-child(4) {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.9) 0%, rgba(167, 139, 250, 0.9) 100%);
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.25);
+        }
+
+        .summary-card:nth-child(5) {
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.9) 0%, rgba(251, 113, 133, 0.9) 100%);
+            box-shadow: 0 8px 24px rgba(236, 72, 153, 0.25);
+        }
+
+        .summary-card:nth-child(6) {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.9) 0%, rgba(251, 191, 36, 0.9) 100%);
+            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.25);
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.15);
+        }
+
+        .summary-card:hover::before {
+            transform: translateX(100%);
+        }
+
+        .summary-card.dimmed {
+            opacity: 0.4;
+            filter: grayscale(0.5);
+            pointer-events: none;
+        }
+
+        .summary-card.period-filter-card {
+            animation: pulseHighlight 2s ease-in-out infinite;
+            transform: scale(1.02);
+            z-index: 5;
+            position: relative;
+        }
+
+        @keyframes pulseHighlight {
+            0%, 100% {
+                box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15);
+            }
+            50% {
+                box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.25);
+            }
+        }
+
+        .summary-card h3 {
+            font-size: 12px;
+            opacity: 0.95;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-weight: 600;
+        }
+
+        .summary-card .value {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            max-height: 600px;
+            overflow-y: auto;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: transparent;
+            color: #e0e0e0;
+        }
+
+        thead {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.95) 0%, rgba(99, 102, 241, 0.95) 100%);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #334155;
+            font-size: 13px;
+        }
+
+        tbody tr:hover {
+            background: #334155;
+        }
+
+        .stop-accrual {
+            background-color: #7c2d12 !important;
+            color: #fca5a5 !important;
+        }
+
+        .warning-badge {
+            background: #ffc107;
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.8) 100%);
+            border-left: 4px solid #3b82f6;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            border-radius: 12px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .info-box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .info-box-header h4 {
+            color: #93c5fd;
+            margin: 0;
+            font-weight: 600;
+            font-size: 16px;
+            flex: 1;
+        }
+
+        .info-box-toggle {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            font-size: 18px;
+        }
+
+        .info-box-toggle:hover {
+            background: rgba(59, 130, 246, 0.3);
+            transform: scale(1.1);
+        }
+
+        .info-box-content {
+            margin-top: 16px;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .info-box-content.collapsed {
+            max-height: 0;
+            margin-top: 0;
+            opacity: 0;
+        }
+
+        .info-box p {
+            color: #cbd5e1;
+            font-size: 14px;
+            line-height: 1.7;
+            opacity: 0.9;
+        }
+
+        .info-box a {
+            color: #60a5fa;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(96, 165, 250, 0.3);
+            transition: all 0.2s;
+        }
+
+        .info-box a:hover {
+            color: #93c5fd;
+            border-bottom-color: rgba(147, 197, 253, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Calculadora de Juros com Stop Accrual</h1>
+            <p>Resolução CMN nº 4966 - Juros acumulados até 90 dias de atraso</p>
+        </div>
+
+        <div class="content">
+            <div class="info-box">
+                <div class="info-box-header" onclick="toggleInfoBox()">
+                    <h4>ℹ️ Sobre o Stop Accrual e Regras Aplicadas</h4>
+                    <div class="info-box-toggle" id="infoBoxToggle">▼</div>
+                </div>
+                <div class="info-box-content" id="infoBoxContent">
+                    <p>
+                        Conforme a <a href="https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o%20CMN&numero=4966" target="_blank">Resolução CMN nº 4966</a>, 
+                        os juros são acumulados apenas até 90 dias de atraso no pagamento. Após esse período, 
+                        a instituição deve suspender o reconhecimento de receitas de juros (stop accrual). <strong>Quando atingido o stop accrual, 
+                        as colunas de juros são zeradas (Juros Dia V, Juros Acum. V e Saldo Vencido + Juros mostram apenas o principal).</strong>
+                    </p>
+                    <p style="margin-top: 10px;">
+                        <strong>Regras implementadas:</strong><br>
+                        • <strong>Ordem de Cálculo Diário:</strong> 1) Juros sobre saldo, 2) Vencimento de parcelas, 3) Aplicação de pagamentos<br>
+                        • <strong>Juros Compostos:</strong> Novo Saldo = Saldo Anterior × (1 + Fator Diário)<br>
+                        • <strong>Fator Diário:</strong> ((1 + Taxa Mensal)^(1/Dias do Mês Referência) - 1)<br>
+                        • <strong>Mês de Referência:</strong> Usa o mês ANTERIOR ao próximo vencimento<br>
+                        • <strong>Fim de Semana:</strong> Se vencimento cai em FDS, fator só muda no próximo dia útil<br>
+                        • Exemplo: 09/05 a 07/06 usa maio (31d=0.31%). 08/06 a 07/07 usa junho (30d=0.32%). 08/07 a 07/08 usa julho (31d=0.31%). 08/08 a 07/09 usa agosto (31d=0.31%)<br>
+                        • Exemplo FDS: 07/07 (domingo) vence, usa junho até 07/07. Em 08/07 (segunda) muda para julho<br>
+                        • <strong>Datas de Vencimento:</strong> Sempre no dia especificado (ex: dia 7 de cada mês, mesmo que seja FDS)<br>
+                        • <strong>Juros de Atraso:</strong> Taxa aumenta 1% no dia SEGUINTE ao vencimento (07/06 vence, 08/06 começa juros de atraso)<br>
+                        • Multa de 2% só se NÃO pagar no vencimento<br>
+                        • <strong>Cronograma de Pagamentos:</strong> Gerado automaticamente com opções: Pago no Vencimento, Pago em Atraso, Não Pago<br>
+                        • Pagamentos calculados automaticamente: PMT (se no vencimento) ou PMT + juros + multa (se em atraso)<br>
+                        • Ordem de abatimento: multa, juros acumulados, principal<br>
+                        • Stop accrual aplicado após 90 dias de atraso OU na data externa informada (colunas de juros zeradas na exibição)<br>
+                        • <strong>Data de Stop Accrual Externa:</strong> Use quando outro loan do cliente já atingiu stop accrual. Esta data será aplicada mesmo antes de 90 dias
+                    </p>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2 onclick="toggleSection('dadosEmprestimo')">
+                    <span>📝 Dados do Empréstimo</span>
+                    <div class="section-toggle" id="toggleDadosEmprestimo">▼</div>
+                </h2>
+                <div class="section-content" id="contentDadosEmprestimo">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="contractDate">Data do Contrato</label>
+                        <input type="date" id="contractDate" value="2024-05-08" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dueDay">Dia de Vencimento (1-31)</label>
+                        <input type="number" id="dueDay" min="1" max="31" placeholder="7" value="7" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="principal">Valor Principal (R$)</label>
+                        <input type="number" id="principal" step="0.01" placeholder="1336.00" value="1336.00" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="installments">Número de Parcelas</label>
+                        <input type="number" id="installments" placeholder="12" value="12" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="interestRate">Taxa de Juros ao Mês (decimal, ex: 0.0995 para 9.95%)</label>
+                        <input type="number" id="interestRate" step="0.0001" placeholder="0.0995" value="0.0995" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pmt">Valor da Parcela (PMT) - R$</label>
+                        <input type="number" id="pmt" step="0.01" placeholder="195.04" value="195.04" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="externalStopAccrualDate">Data de Stop Accrual Externa (Opcional)</label>
+                        <input type="date" id="externalStopAccrualDate" title="Data de stop accrual determinada por outro loan do cliente. Se preenchida, será usada ao invés dos 90 dias de atraso.">
+                        <small style="display: block; color: #666; margin-top: 5px; font-size: 12px;">
+                            ℹ️ Use quando outro loan do cliente já atingiu stop accrual. Esta data será aplicada mesmo antes de 90 dias.
+                        </small>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2 onclick="toggleSection('cronogramaPagamentos')">
+                    <span>💰 Cronograma de Pagamentos</span>
+                    <div class="section-toggle" id="toggleCronogramaPagamentos">▼</div>
+                </h2>
+                <div class="section-content" id="contentCronogramaPagamentos">
+                <div class="payments-section">
+                    <button class="btn btn-primary" onclick="generatePaymentSchedule()" style="margin-bottom: 20px;">
+                        🔄 Gerar/Atualizar Cronograma
+                    </button>
+                    <div id="paymentsScheduleContainer">
+                        <p style="color: #666; font-style: italic; padding: 20px; text-align: center;">
+                            Clique em "Gerar/Atualizar Cronograma" após preencher os dados do empréstimo
+                        </p>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <button class="btn btn-primary" onclick="calculate()" style="padding: 15px 50px; font-size: 16px;">
+                    🧮 Calcular Juros Diários
+                </button>
+                <button class="btn btn-success" onclick="downloadCSV()" id="downloadBtn" style="padding: 15px 50px; font-size: 16px; display: none; margin-left: 20px;">
+                    📥 Baixar CSV
+                </button>
+            </div>
+
+            <div class="results-section" id="resultsSection">
+                <div class="form-section">
+                    <h2 onclick="toggleSection('resumo')">
+                        <span>📈 Resumo</span>
+                        <div class="section-toggle" id="toggleResumo">▼</div>
+                    </h2>
+                    <div class="section-content" id="contentResumo">
+                    <div style="background: #1e293b; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #8b5cf6;">
+                        <div style="display: flex; gap: 15px; align-items: end; flex-wrap: wrap;">
+                            <div class="form-group" style="margin: 0; flex: 1; min-width: 150px;">
+                                <label for="filterStartDate" style="font-size: 13px; font-weight: 600; color: #c4b5fd;">Data Inicial (Filtro)</label>
+                                <input type="date" id="filterStartDate" style="width: 100%; padding: 8px; border: 1px solid #4c1d95; border-radius: 5px; background: #0f172a; color: #e0e0e0;">
+                            </div>
+                            <div class="form-group" style="margin: 0; flex: 1; min-width: 150px;">
+                                <label for="filterEndDate" style="font-size: 13px; font-weight: 600; color: #c4b5fd;">Data Final (Filtro)</label>
+                                <input type="date" id="filterEndDate" style="width: 100%; padding: 8px; border: 1px solid #4c1d95; border-radius: 5px; background: #0f172a; color: #e0e0e0;">
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn btn-primary" onclick="applyPeriodFilter()" style="padding: 10px 20px; font-size: 14px;">
+                                    🔍 Filtrar Período
+                                </button>
+                                <button class="btn btn-secondary" onclick="clearPeriodFilter()" style="padding: 10px 20px; font-size: 14px;">
+                                    🗑️ Limpar Filtro
+                                </button>
+                            </div>
+                        </div>
+                        <small style="display: block; color: #a78bfa; margin-top: 10px; font-size: 12px;">
+                            ℹ️ O filtro não altera os cálculos, apenas mostra os juros do período selecionado no resumo.
+                        </small>
+                    </div>
+                    <div class="summary-cards" id="summaryCards"></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2 onclick="toggleSection('detalhamento')">
+                        <span>📋 Detalhamento Diário de Juros</span>
+                        <div class="section-toggle" id="toggleDetalhamento">▼</div>
+                    </h2>
+                    <div class="section-content" id="contentDetalhamento">
+                    <div class="table-container">
+                        <table id="resultsTable">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Fator Diário (NV)</th>
+                                    <th>Saldo Não Vencido</th>
+                                    <th>Juros Dia (NV)</th>
+                                    <th>Saldo Vencido + Juros</th>
+                                    <th>Juros Dia (V)</th>
+                                    <th>Juros Acum. (V)</th>
+                                    <th>Multa Acum.</th>
+                                    <th>Pagamento</th>
+                                    <th>Dias Atraso</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsBody">                            </tbody>
+                        </table>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Feedback -->
+        <div class="container" style="margin-top: 40px; margin-bottom: 40px;">
+            <div class="form-section" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%); border: 2px solid rgba(139, 92, 246, 0.3); border-radius: 16px; padding: 30px;">
+                <div style="text-align: center;">
+                    <h2 style="color: #a78bfa; margin-bottom: 20px; font-size: 24px;">
+                        💬 Sua opinião é importante!
+                    </h2>
+                    <p style="color: #c4b5fd; margin-bottom: 25px; font-size: 16px; line-height: 1.6;">
+                        Ajude-nos a melhorar esta calculadora compartilhando seu feedback, sugestões ou reportando problemas.
+                    </p>
+                    <a 
+                        href="https://docs.google.com/spreadsheets/d/1k8RD3Zl-3oLjrXGUnHO7ymJKBoRh_F6gCPY9gNt8Nk8/edit?gid=0#gid=0" 
+                        target="_blank"
+                        style="
+                            display: inline-block;
+                            background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+                            color: white;
+                            padding: 15px 35px;
+                            border-radius: 12px;
+                            text-decoration: none;
+                            font-weight: 600;
+                            font-size: 16px;
+                            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+                            transition: all 0.3s ease;
+                            border: 2px solid rgba(255, 255, 255, 0.2);
+                        "
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(139, 92, 246, 0.6)';"
+                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(139, 92, 246, 0.4)';"
+                    >
+                        📝 Enviar Feedback
+                    </a>
+                    <p style="color: #a78bfa; margin-top: 20px; font-size: 13px; opacity: 0.8;">
+                        O link abrirá em uma nova aba
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variável global para armazenar dados calculados
+        let calculatedData = null;
+
+        // Gerar cronograma automaticamente quando dados do empréstimo mudarem
+        document.addEventListener('DOMContentLoaded', function() {
+            const contractDateInput = document.getElementById('contractDate');
+            const dueDayInput = document.getElementById('dueDay');
+            const installmentsInput = document.getElementById('installments');
+
+            [contractDateInput, dueDayInput, installmentsInput].forEach(input => {
+                if (input) {
+                    input.addEventListener('change', function() {
+                        // Gerar automaticamente se todos os campos estiverem preenchidos
+                        const contractDate = document.getElementById('contractDate').value;
+                        const dueDay = document.getElementById('dueDay').value;
+                        const installments = document.getElementById('installments').value;
+                        
+                        if (contractDate && dueDay && installments) {
+                            generatePaymentSchedule();
+                        }
+                    });
+                }
+            });
+        });
+
+        function toggleInfoBox() {
+            const content = document.getElementById('infoBoxContent');
+            const toggle = document.getElementById('infoBoxToggle');
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                toggle.textContent = '▼';
+                toggle.style.transform = 'rotate(0deg)';
+            } else {
+                content.classList.add('collapsed');
+                toggle.textContent = '▶';
+                toggle.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function toggleSection(sectionId) {
+            // Mapear IDs para os nomes corretos
+            const idMap = {
+                'dadosEmprestimo': { content: 'contentDadosEmprestimo', toggle: 'toggleDadosEmprestimo' },
+                'cronogramaPagamentos': { content: 'contentCronogramaPagamentos', toggle: 'toggleCronogramaPagamentos' },
+                'resumo': { content: 'contentResumo', toggle: 'toggleResumo' },
+                'detalhamento': { content: 'contentDetalhamento', toggle: 'toggleDetalhamento' }
+            };
+            
+            const ids = idMap[sectionId];
+            if (!ids) return;
+            
+            const content = document.getElementById(ids.content);
+            const toggle = document.getElementById(ids.toggle);
+            
+            if (!content || !toggle) return;
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                toggle.textContent = '▼';
+            } else {
+                content.classList.add('collapsed');
+                toggle.textContent = '▶';
+            }
+        }
+
+        function generatePaymentSchedule() {
+            const contractDate = new Date(document.getElementById('contractDate').value + 'T00:00:00');
+            const dueDay = parseInt(document.getElementById('dueDay').value);
+            const installments = parseInt(document.getElementById('installments').value);
+
+            if (!contractDate || !dueDay || !installments) {
+                alert('Por favor, preencha os dados do empréstimo primeiro!');
+                return;
+            }
+
+            const container = document.getElementById('paymentsScheduleContainer');
+            
+            // Criar tabela
+            let tableHTML = `
+                <table class="payments-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th style="width: 150px;">Vencimento</th>
+                            <th style="width: 80px;">Pago?</th>
+                            <th style="width: 160px;">Tipo</th>
+                            <th>Data do Pagamento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            for (let i = 1; i <= installments; i++) {
+                let dueDate = new Date(contractDate.getFullYear(), contractDate.getMonth() + i, dueDay);
+                
+                // Ajustar para o último dia do mês se o dia não existir
+                if (dueDate.getDate() !== dueDay) {
+                    dueDate = new Date(contractDate.getFullYear(), contractDate.getMonth() + i + 1, 0);
+                }
+
+                const dueDateStr = dueDate.toISOString().split('T')[0];
+                const dueDateFormatted = dueDate.toLocaleDateString('pt-BR');
+
+                tableHTML += `
+                    <tr id="payment-row-${i}">
+                        <td class="installment-number">${i}</td>
+                        <td><strong>${dueDateFormatted}</strong></td>
+                        <td>
+                            <input type="checkbox" 
+                                   class="payment-checkbox" 
+                                   id="payment-paid-${i}" 
+                                   onchange="updatePaymentRow(${i}, '${dueDateStr}')">
+                        </td>
+                        <td>
+                            <select class="payment-type-select" 
+                                    id="payment-type-${i}" 
+                                    onchange="updatePaymentRow(${i}, '${dueDateStr}')"
+                                    disabled>
+                                <option value="on-time">No Vencimento</option>
+                                <option value="early">Antecipado</option>
+                                <option value="late">Em Atraso</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="date" 
+                                   class="payment-date-input" 
+                                   id="payment-date-${i}" 
+                                   min="${contractDate.toISOString().split('T')[0]}"
+                                   onchange="updatePaymentRow(${i}, '${dueDateStr}')"
+                                   disabled>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            tableHTML += `
+                    </tbody>
+                </table>
+                <div style="margin-top: 15px; font-size: 12px; color: #666;">
+                    💡 <strong>Dica:</strong> Marque o checkbox para indicar pagamento. Use "Antecipado" para pagamentos antes do vencimento.
+                </div>
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+
+        function updatePaymentRow(installment, dueDateStr) {
+            const checkbox = document.getElementById(`payment-paid-${installment}`);
+            const typeSelect = document.getElementById(`payment-type-${installment}`);
+            const dateInput = document.getElementById(`payment-date-${installment}`);
+            const row = document.getElementById(`payment-row-${installment}`);
+
+            if (!row) return;
+
+            // Remover classes anteriores
+            row.classList.remove('paid', 'early', 'late');
+
+            if (checkbox && checkbox.checked) {
+                // Habilitar campos
+                if (typeSelect) typeSelect.disabled = false;
+                if (dateInput) dateInput.disabled = false;
+
+                const dueDate = new Date(dueDateStr + 'T00:00:00');
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                // Se a data foi alterada manualmente, atualizar o tipo automaticamente
+                if (dateInput && dateInput.value) {
+                    const paymentDate = new Date(dateInput.value + 'T00:00:00');
+                    
+                    // Atualizar tipo baseado na data
+                    if (paymentDate < dueDate) {
+                        if (typeSelect) typeSelect.value = 'early';
+                        row.classList.add('early');
+                    } else if (paymentDate > dueDate) {
+                        if (typeSelect) typeSelect.value = 'late';
+                        row.classList.add('late');
+                    } else {
+                        if (typeSelect) typeSelect.value = 'on-time';
+                        row.classList.add('paid');
+                    }
+                } else if (!dateInput.value) {
+                    // Se não tem data, definir baseado no tipo selecionado
+                    if (typeSelect) {
+                        if (typeSelect.value === 'on-time') {
+                            dateInput.value = dueDateStr;
+                        } else if (typeSelect.value === 'early') {
+                            // Antecipado: usar data de hoje se antes do vencimento, senão 1 dia antes
+                            if (today < dueDate) {
+                                dateInput.value = today.toISOString().split('T')[0];
+                            } else {
+                                const oneDayBefore = new Date(dueDate);
+                                oneDayBefore.setDate(oneDayBefore.getDate() - 1);
+                                dateInput.value = oneDayBefore.toISOString().split('T')[0];
+                            }
+                        } else {
+                            // Atraso: usar data de hoje se depois do vencimento, senão 1 dia depois
+                            if (today > dueDate) {
+                                dateInput.value = today.toISOString().split('T')[0];
+                            } else {
+                                const oneDayAfter = new Date(dueDate);
+                                oneDayAfter.setDate(oneDayAfter.getDate() + 1);
+                                dateInput.value = oneDayAfter.toISOString().split('T')[0];
+                            }
+                        }
+                    }
+
+                    // Atualizar classe da linha após definir data
+                    if (dateInput.value) {
+                        const paymentDate = new Date(dateInput.value + 'T00:00:00');
+                        if (paymentDate < dueDate) {
+                            row.classList.add('early');
+                        } else if (paymentDate > dueDate) {
+                            row.classList.add('late');
+                        } else {
+                            row.classList.add('paid');
+                        }
+                    }
+                }
+            } else {
+                // Desabilitar campos e limpar
+                if (typeSelect) {
+                    typeSelect.disabled = true;
+                    typeSelect.value = 'on-time';
+                }
+                if (dateInput) {
+                    dateInput.disabled = true;
+                    dateInput.value = '';
+                }
+            }
+        }
+
+        function getPayments() {
+            const payments = [];
+            const installments = parseInt(document.getElementById('installments').value);
+            
+            for (let i = 1; i <= installments; i++) {
+                const checkbox = document.getElementById(`payment-paid-${i}`);
+                const dateInput = document.getElementById(`payment-date-${i}`);
+                
+                if (checkbox && checkbox.checked && dateInput && dateInput.value) {
+                    payments.push({
+                        date: new Date(dateInput.value + 'T00:00:00')
+                    });
+                }
+            }
+            
+            return payments.sort((a, b) => a.date - b.date);
+        }
+
+        function calculate() {
+            // Obter dados do formulário
+            const contractDate = new Date(document.getElementById('contractDate').value + 'T00:00:00');
+            const dueDay = parseInt(document.getElementById('dueDay').value);
+            const principal = parseFloat(document.getElementById('principal').value);
+            const installments = parseInt(document.getElementById('installments').value);
+            const interestRateMonthly = parseFloat(document.getElementById('interestRate').value);
+            const pmt = parseFloat(document.getElementById('pmt').value);
+            const payments = getPayments();
+            
+            // Data de stop accrual externa (opcional)
+            const externalStopAccrualDateInput = document.getElementById('externalStopAccrualDate');
+            const externalStopAccrualDate = externalStopAccrualDateInput && externalStopAccrualDateInput.value 
+                ? new Date(externalStopAccrualDateInput.value + 'T00:00:00')
+                : null;
+
+            // Validações
+            if (!contractDate || !dueDay || !principal || !installments || !interestRateMonthly || !pmt) {
+                alert('Por favor, preencha todos os campos obrigatórios!');
+                return;
+            }
+
+            const lateFeeRate = 0.02; // Multa de 2%
+            
+            // Função para obter número de dias em um mês
+            function getDaysInMonth(date) {
+                return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+            }
+            
+            // Função para verificar se é fim de semana
+            function isWeekend(date) {
+                const day = date.getDay();
+                return day === 0 || day === 6; // Domingo ou Sábado
+            }
+            
+            // Função para obter o próximo dia útil
+            function getNextBusinessDay(date) {
+                const nextDay = new Date(date);
+                nextDay.setDate(nextDay.getDate() + 1);
+                
+                // Se o próximo dia também é fim de semana, avança até segunda
+                while (isWeekend(nextDay)) {
+                    nextDay.setDate(nextDay.getDate() + 1);
+                }
+                
+                return nextDay;
+            }
+            
+            // Função para calcular taxa diária baseada no mês de referência
+            // Regras:
+            // 1. No início sempre usa o mês de contratação
+            // 2. O denominador muda 1 dia após a data de vencimento (ou 1 dia útil se vencimento for FDS)
+            // 3. Após a mudança, usa o mês do vencimento que acabou de passar
+            function getDailyRateForDate(currentDate, dueDay, baseRate, schedule, contractDate) {
+                // Normalizar datas para comparação
+                const currentDateNormalized = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+                const contractDateNormalized = new Date(contractDate.getFullYear(), contractDate.getMonth(), contractDate.getDate());
+                
+                // Por padrão, começa com o mês de contratação
+                let referenceDate = new Date(contractDate.getFullYear(), contractDate.getMonth(), 1);
+                
+                // Se há cronograma, verificar se algum vencimento já passou + 1 dia
+                if (schedule && schedule.length > 0) {
+                    // Encontrar o último vencimento cuja data de mudança já passou
+                    let lastChangedDueDate = null;
+                    
+                    for (let s of schedule) {
+                        // Normalizar data de vencimento
+                        const dueDate = s.dueDate instanceof Date 
+                            ? new Date(s.dueDate.getFullYear(), s.dueDate.getMonth(), s.dueDate.getDate())
+                            : new Date(s.dueDate);
+                        const dueDateNormalized = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+                        
+                        // Calcular data efetiva de mudança
+                        // Regra simplificada: Vencimento (tanto em dia útil quanto não útil): mudança no dia seguinte
+                        let changeDate = new Date(dueDateNormalized);
+                        changeDate.setDate(changeDate.getDate() + 1);
+                        const changeDateNormalized = new Date(changeDate.getFullYear(), changeDate.getMonth(), changeDate.getDate());
+                        
+                        // Verificar se já passou a data de mudança (>= para incluir o dia da mudança)
+                        // Exemplo: vence 08/11, muda 09/11. Em 08/11 ainda usa outubro, em 09/11 usa novembro
+                        if (currentDateNormalized >= changeDateNormalized) {
+                            // Se ainda não encontrou nenhum ou este é mais recente
+                            if (!lastChangedDueDate || dueDateNormalized > lastChangedDueDate) {
+                                lastChangedDueDate = dueDateNormalized;
+                            }
+                        }
+                    }
+                    
+                    // Se encontrou um vencimento cuja mudança já passou, usar o mês desse vencimento
+                    if (lastChangedDueDate) {
+                        referenceDate = new Date(lastChangedDueDate.getFullYear(), lastChangedDueDate.getMonth(), 1);
+                    }
+                }
+                
+                const daysInReferenceMonth = getDaysInMonth(referenceDate);
+                return Math.pow(1 + baseRate, 1 / daysInReferenceMonth) - 1;
+            }
+
+            // Gerar cronograma de vencimentos
+            const schedule = [];
+            for (let i = 1; i <= installments; i++) {
+                let dueDate = new Date(contractDate.getFullYear(), contractDate.getMonth() + i, dueDay);
+                
+                // Ajustar para o último dia do mês se o dia não existir (ex: 31 em fevereiro)
+                if (dueDate.getDate() !== dueDay) {
+                    dueDate = new Date(contractDate.getFullYear(), contractDate.getMonth() + i + 1, 0);
+                }
+                
+                schedule.push({
+                    installment: i,
+                    dueDate: dueDate,
+                    amount: pmt,
+                    isPaid: false
+                });
+            }
+
+            // Calcular juros dia a dia
+            const dailyData = [];
+            let currentBalanceNormal = principal; // Saldo não vencido
+            let overdueBalances = []; // Array de saldos vencidos {balance, interestAccrued, lateFee, dueDate, daysOverdue}
+            let paymentIndex = 0;
+            
+            // Data final para cálculo
+            let endDate = new Date(contractDate);
+            endDate.setFullYear(endDate.getFullYear() + 2);
+
+            let currentDate = new Date(contractDate);
+            currentDate.setDate(currentDate.getDate() + 1); // Começa no dia seguinte ao contrato
+            
+            while (currentDate <= endDate) {
+                const daysSinceStart = Math.floor((currentDate - contractDate) / (1000 * 60 * 60 * 24));
+                
+                // PASSO 1: Calcular juros do dia no saldo normal ANTES de qualquer movimentação
+                let dailyInterestNormal = 0;
+                let dailyRateNormal = 0;
+                if (currentBalanceNormal > 0) {
+                    dailyRateNormal = getDailyRateForDate(currentDate, dueDay, interestRateMonthly, schedule, contractDate);
+                    const newBalance = currentBalanceNormal * (1 + dailyRateNormal);
+                    dailyInterestNormal = newBalance - currentBalanceNormal;
+                    currentBalanceNormal = newBalance;
+                }
+
+                // PASSO 2: Verificar se alguma parcela vence hoje e mover para vencido
+                for (let i = 0; i < schedule.length; i++) {
+                    if (schedule[i].dueDate.toDateString() === currentDate.toDateString() && !schedule[i].isPaid) {
+                        // Verificar se há pagamento na data de vencimento
+                        const hasPaymentOnDueDate = payments.some(p => p.date.toDateString() === currentDate.toDateString());
+                        
+                        // Move o valor da parcela para vencido
+                        overdueBalances.push({
+                            balance: schedule[i].amount,
+                            interestAccrued: 0,
+                            lateFee: hasPaymentOnDueDate ? 0 : schedule[i].amount * lateFeeRate, // Late fee só se NÃO pagar no vencimento
+                            dueDate: new Date(schedule[i].dueDate),
+                            daysOverdue: 0,
+                            installment: schedule[i].installment
+                        });
+                        currentBalanceNormal -= schedule[i].amount;
+                    }
+                }
+
+                // PASSO 3: Calcular juros do dia nos saldos vencidos e atualizar dias de atraso
+                let totalOverdueBalance = 0;
+                let totalOverdueInterest = 0;
+                let totalLateFees = 0;
+                let maxDaysOverdue = 0;
+                let dailyRateOverdue = 0;
+
+                for (let overdue of overdueBalances) {
+                    overdue.daysOverdue = Math.floor((currentDate - overdue.dueDate) / (1000 * 60 * 60 * 24));
+                    maxDaysOverdue = Math.max(maxDaysOverdue, overdue.daysOverdue);
+                    
+                    // Verificar se está em stop accrual
+                    // Se há data externa de stop accrual, usar ela; senão usar 90 dias
+                    const isInStopAccrual = externalStopAccrualDate 
+                        ? currentDate >= externalStopAccrualDate
+                        : overdue.daysOverdue > 90;
+                    
+                    // Juros de atraso começam no dia SEGUINTE ao vencimento (daysOverdue > 0)
+                    // Stop accrual: não acumula juros após 90 dias OU após data externa
+                    if (overdue.daysOverdue > 0 && !isInStopAccrual) {
+                        // Taxa aumenta 1% quando vencido, denominador baseado no dia de vencimento
+                        dailyRateOverdue = getDailyRateForDate(currentDate, dueDay, interestRateMonthly + 0.01, schedule, contractDate);
+                        
+                        // JUROS COMPOSTOS: calcula sobre o saldo atual (principal + juros já acumulados)
+                        const baseForInterest = overdue.balance + overdue.interestAccrued;
+                        const newTotal = baseForInterest * (1 + dailyRateOverdue);
+                        const dailyInterest = newTotal - baseForInterest;
+                        overdue.interestAccrued += dailyInterest;
+                        totalOverdueInterest += dailyInterest;
+                    }
+                    
+                    totalOverdueBalance += overdue.balance;
+                    totalLateFees += overdue.lateFee;
+                }
+
+                // PASSO 4: Verificar pagamentos neste dia (APÓS calcular todos os juros)
+                let paymentAmountToApply = 0;
+                let paymentAmountDisplay = 0;
+                let hadPayment = false;
+                while (paymentIndex < payments.length && 
+                       payments[paymentIndex].date.toDateString() === currentDate.toDateString()) {
+                    // Calcular valor do pagamento: PMT + juros + multa acumulados
+                    if (overdueBalances.length > 0) {
+                        const oldestOverdue = overdueBalances[0]; // Pega o mais antigo
+                        const paymentValue = pmt + oldestOverdue.interestAccrued + oldestOverdue.lateFee;
+                        paymentAmountToApply += paymentValue;
+                        paymentAmountDisplay += paymentValue;
+                    } else {
+                        paymentAmountToApply += pmt; // Se não há parcelas vencidas, paga só o PMT
+                        paymentAmountDisplay += pmt;
+                    }
+                    hadPayment = true;
+                    paymentIndex++;
+                }
+
+                // PASSO 5: Aplicar pagamento (abate primeiro os vencidos mais antigos)
+                if (paymentAmountToApply > 0 && overdueBalances.length > 0) {
+                    overdueBalances.sort((a, b) => a.dueDate - b.dueDate);
+                    
+                    for (let i = 0; i < overdueBalances.length && paymentAmountToApply > 0; i++) {
+                        const overdue = overdueBalances[i];
+                        
+                        // Abater multa primeiro
+                        if (paymentAmountToApply >= overdue.lateFee) {
+                            paymentAmountToApply -= overdue.lateFee;
+                            overdue.lateFee = 0;
+                        } else {
+                            overdue.lateFee -= paymentAmountToApply;
+                            paymentAmountToApply = 0;
+                            break;
+                        }
+                        
+                        // Depois juros acumulados
+                        if (paymentAmountToApply >= overdue.interestAccrued) {
+                            paymentAmountToApply -= overdue.interestAccrued;
+                            overdue.interestAccrued = 0;
+                        } else {
+                            overdue.interestAccrued -= paymentAmountToApply;
+                            paymentAmountToApply = 0;
+                            break;
+                        }
+                        
+                        // Por fim, o principal
+                        if (paymentAmountToApply >= overdue.balance) {
+                            paymentAmountToApply -= overdue.balance;
+                            overdue.balance = 0;
+                            // Marcar parcela como paga
+                            for (let s of schedule) {
+                                if (s.installment === overdue.installment) {
+                                    s.isPaid = true;
+                                    break;
+                                }
+                            }
+                        } else {
+                            overdue.balance -= paymentAmountToApply;
+                            paymentAmountToApply = 0;
+                            break;
+                        }
+                    }
+                    
+                    // Remover saldos vencidos quitados
+                    overdueBalances = overdueBalances.filter(o => o.balance > 0.01);
+                }
+
+                // Status
+                let status = 'Normal';
+                const isInStopAccrualByDate = externalStopAccrualDate && currentDate >= externalStopAccrualDate;
+                const isInStopAccrualByDays = maxDaysOverdue > 90;
+                
+                if (isInStopAccrualByDate || isInStopAccrualByDays) {
+                    status = 'Stop Accrual';
+                } else if (maxDaysOverdue > 0) {
+                    status = `${maxDaysOverdue} dias em atraso`;
+                }
+
+                // Registrar dados do dia
+                dailyData.push({
+                    date: new Date(currentDate),
+                    daysSinceStart: daysSinceStart,
+                    daysOverdue: maxDaysOverdue,
+                    balanceNormal: currentBalanceNormal,
+                    balanceOverdue: totalOverdueBalance,
+                    dailyInterestNormal: dailyInterestNormal,
+                    dailyInterestOverdue: totalOverdueInterest,
+                    totalInterestOverdue: overdueBalances.reduce((sum, o) => sum + o.interestAccrued, 0),
+                    totalLateFees: totalLateFees,
+                    payment: hadPayment ? paymentAmountDisplay : 0, // Mostra o valor calculado do pagamento
+                    status: status,
+                    dailyRateNormal: dailyRateNormal,
+                    dailyRateOverdue: dailyRateOverdue
+                });
+
+                // Verificar se terminou
+                if (currentBalanceNormal < 0.01 && overdueBalances.length === 0) {
+                    break;
+                }
+
+                // Próximo dia
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            // Armazenar dados para download CSV e filtros
+            calculatedData = dailyData;
+            fullCalculatedData = dailyData;
+            
+            // Exibir resultados
+            displayResults(dailyData);
+        }
+
+        // Variável global para armazenar dados completos
+        let fullCalculatedData = null;
+
+        function applyPeriodFilter() {
+            if (!fullCalculatedData || fullCalculatedData.length === 0) {
+                alert('Por favor, calcule os juros primeiro!');
+                return;
+            }
+
+            const startDateInput = document.getElementById('filterStartDate');
+            const endDateInput = document.getElementById('filterEndDate');
+            
+            const startDate = startDateInput && startDateInput.value 
+                ? new Date(startDateInput.value + 'T00:00:00')
+                : null;
+            const endDate = endDateInput && endDateInput.value 
+                ? new Date(endDateInput.value + 'T23:59:59')
+                : null;
+
+            // Validar datas
+            if (startDate && endDate && startDate > endDate) {
+                alert('Data inicial não pode ser maior que data final!');
+                return;
+            }
+
+            // Filtrar dados pelo período
+            let filteredData = fullCalculatedData;
+            if (startDate || endDate) {
+                filteredData = fullCalculatedData.filter(day => {
+                    const dayDate = new Date(day.date);
+                    dayDate.setHours(0, 0, 0, 0);
+                    
+                    if (startDate && endDate) {
+                        return dayDate >= startDate && dayDate <= endDate;
+                    } else if (startDate) {
+                        return dayDate >= startDate;
+                    } else if (endDate) {
+                        return dayDate <= endDate;
+                    }
+                    return true;
+                });
+            }
+
+            if (filteredData.length === 0) {
+                alert('Nenhum dado encontrado para o período selecionado!');
+                return;
+            }
+
+            // Recalcular resumo com dados filtrados
+            displayResults(fullCalculatedData, filteredData);
+        }
+
+        function clearPeriodFilter() {
+            const startDateInput = document.getElementById('filterStartDate');
+            const endDateInput = document.getElementById('filterEndDate');
+            
+            if (startDateInput) startDateInput.value = '';
+            if (endDateInput) endDateInput.value = '';
+
+            // Mostrar resumo completo
+            if (fullCalculatedData && fullCalculatedData.length > 0) {
+                displayResults(fullCalculatedData, fullCalculatedData);
+            }
+        }
+
+        function displayResults(data, filteredData = null) {
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsBody = document.getElementById('resultsBody');
+            const summaryCards = document.getElementById('summaryCards');
+
+            // Usar dados filtrados se fornecidos, senão usar todos os dados
+            const dataForSummary = filteredData || data;
+            const dataForTable = data; // Tabela sempre mostra todos os dados
+
+            // Calcular resumo com dados filtrados
+            const lastDay = dataForSummary[dataForSummary.length - 1];
+            const firstDay = dataForSummary[0];
+            
+            // Verificar se há filtro ativo
+            const startDateInput = document.getElementById('filterStartDate');
+            const endDateInput = document.getElementById('filterEndDate');
+            const hasFilter = (startDateInput && startDateInput.value) || (endDateInput && endDateInput.value);
+            const filterLabel = hasFilter ? ' (Período Filtrado)' : '';
+            
+            // Calcular valores totais (sempre usar dados completos)
+            const lastDayComplete = data[data.length - 1];
+            const totalBalance = lastDayComplete.balanceNormal + lastDayComplete.balanceOverdue;
+            const totalInterestAccrued = lastDayComplete.totalInterestOverdue;
+            const totalPayments = data.reduce((sum, day) => sum + day.payment, 0);
+            const daysInStopAccrual = data.filter(d => d.status === 'Stop Accrual').length;
+            
+            // Calcular juros até o stop accrual (último dia antes do stop accrual)
+            let interestUntilStopAccrual = 0;
+            let lateFeesUntilStopAccrual = 0;
+            let stopAccrualDate = null;
+            const firstStopAccrualDay = data.find(d => d.status === 'Stop Accrual');
+            if (firstStopAccrualDay) {
+                stopAccrualDate = firstStopAccrualDay.date;
+                const stopAccrualIndex = data.indexOf(firstStopAccrualDay);
+                if (stopAccrualIndex > 0) {
+                    interestUntilStopAccrual = data[stopAccrualIndex - 1].totalInterestOverdue;
+                    lateFeesUntilStopAccrual = data[stopAccrualIndex - 1].totalLateFees;
+                }
+            } else {
+                interestUntilStopAccrual = totalInterestAccrued;
+                lateFeesUntilStopAccrual = lastDayComplete.totalLateFees;
+            }
+            
+            // Juros acumulados de operações não vencidas (soma de todos os juros normais)
+            const totalNormalInterest = data.reduce((sum, day) => sum + day.dailyInterestNormal, 0);
+            
+            // Juros acumulados de operações não vencidas até a data de stop accrual
+            let normalInterestUntilStopAccrual = 0;
+            if (firstStopAccrualDay) {
+                const stopAccrualIndex = data.indexOf(firstStopAccrualDay);
+                // Somar juros normais até o dia anterior ao stop accrual
+                normalInterestUntilStopAccrual = data.slice(0, stopAccrualIndex).reduce((sum, day) => sum + day.dailyInterestNormal, 0);
+            } else {
+                // Se não há stop accrual, usar o total
+                normalInterestUntilStopAccrual = totalNormalInterest;
+            }
+            
+            // Se há filtro, calcular valores do período
+            let periodInterest = 0;
+            let periodNormalInterest = 0;
+            let periodPayments = 0;
+            if (hasFilter && filteredData && filteredData.length > 0) {
+                const firstDayBeforeFilter = data.find(d => {
+                    const dayDate = new Date(d.date);
+                    dayDate.setHours(0, 0, 0, 0);
+                    const filterStart = startDateInput && startDateInput.value 
+                        ? new Date(startDateInput.value + 'T00:00:00')
+                        : null;
+                    if (filterStart) {
+                        const dayBefore = new Date(filterStart);
+                        dayBefore.setDate(dayBefore.getDate() - 1);
+                        return dayDate.getTime() === dayBefore.getTime();
+                    }
+                    return false;
+                });
+                
+                const interestAtStart = firstDayBeforeFilter ? firstDayBeforeFilter.totalInterestOverdue : 0;
+                const interestAtEnd = lastDay.totalInterestOverdue;
+                periodInterest = interestAtEnd - interestAtStart;
+                
+                // Juros não vencidos no período (soma dos juros normais diários do período)
+                periodNormalInterest = dataForSummary.reduce((sum, day) => sum + day.dailyInterestNormal, 0);
+                
+                periodPayments = dataForSummary.reduce((sum, day) => sum + day.payment, 0);
+            }
+            
+            // Exibir cards de resumo
+            summaryCards.innerHTML = `
+                <div class="summary-card ${hasFilter ? 'dimmed' : ''}">
+                    <h3>Juros até Stop Accrual</h3>
+                    <div class="value">R$ ${interestUntilStopAccrual.toFixed(2)}</div>
+                    <small style="opacity: 0.8; font-size: 11px;">Total de juros acumulados até o início do stop accrual</small>
+                </div>
+                <div class="summary-card ${hasFilter ? 'dimmed' : ''}">
+                    <h3>Total de Pagamentos</h3>
+                    <div class="value">R$ ${totalPayments.toFixed(2)}</div>
+                    ${hasFilter && periodPayments > 0 ? `<small style="opacity: 0.8; font-size: 11px;">No período: R$ ${periodPayments.toFixed(2)}</small>` : ''}
+                </div>
+                <div class="summary-card ${hasFilter ? 'dimmed' : ''}">
+                    <h3>Dias em Stop Accrual</h3>
+                    <div class="value">${daysInStopAccrual}</div>
+                </div>
+                <div class="summary-card ${hasFilter ? 'dimmed' : ''}">
+                    <h3>Multas Acumuladas</h3>
+                    <div class="value">R$ ${lastDayComplete.totalLateFees.toFixed(2)}</div>
+                    <small style="opacity: 0.8; font-size: 11px;">Total: R$ ${lastDayComplete.totalLateFees.toFixed(2)} | Até Stop Accrual: R$ ${lateFeesUntilStopAccrual.toFixed(2)}</small>
+                </div>
+                <div class="summary-card ${hasFilter ? 'dimmed' : ''}">
+                    <h3>Data do Stop Accrual</h3>
+                    <div class="value" style="font-size: 18px;">${stopAccrualDate ? stopAccrualDate.toLocaleDateString('pt-BR') : 'Não atingido'}</div>
+                </div>
+                <div class="summary-card ${hasFilter ? 'dimmed' : ''}">
+                    <h3>Juros Acumulados (Não Vencidas)</h3>
+                    <div class="value">R$ ${totalNormalInterest.toFixed(2)}</div>
+                    <small style="opacity: 0.8; font-size: 11px;">Juros de operações não vencidas</small>
+                </div>
+                <div class="summary-card ${hasFilter ? 'dimmed' : ''}">
+                    <h3>Juros Acumulados (Não Vencidas) até Stop Accrual</h3>
+                    <div class="value">R$ ${normalInterestUntilStopAccrual.toFixed(2)}</div>
+                    <small style="opacity: 0.8; font-size: 11px;">Juros não vencidos acumulados até a data de stop accrual</small>
+                </div>
+                ${hasFilter && periodInterest > 0 ? `
+                <div class="summary-card period-filter-card" style="background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); border: 2px solid #818cf8; box-shadow: 0 12px 32px rgba(59, 130, 246, 0.4);">
+                    <h3>Juros Vencidos no Período Filtrado</h3>
+                    <div class="value">R$ ${periodInterest.toFixed(2)}</div>
+                    <small style="opacity: 0.9; font-size: 11px;">Juros vencidos acumulados no período selecionado</small>
+                </div>
+                ` : ''}
+                ${hasFilter && periodNormalInterest > 0 ? `
+                <div class="summary-card period-filter-card" style="background: linear-gradient(135deg, #10b981 0%, #34d399 100%); border: 2px solid #6ee7b7; box-shadow: 0 12px 32px rgba(16, 185, 129, 0.4);">
+                    <h3>Juros Não Vencidos no Período Filtrado</h3>
+                    <div class="value">R$ ${periodNormalInterest.toFixed(2)}</div>
+                    <small style="opacity: 0.9; font-size: 11px;">Juros não vencidos acumulados no período selecionado</small>
+                </div>
+                ` : ''}
+            `;
+            
+
+            // Exibir tabela
+            resultsBody.innerHTML = '';
+            
+            data.forEach(day => {
+                const row = document.createElement('tr');
+                if (day.status === 'Stop Accrual') {
+                    row.className = 'stop-accrual';
+                }
+
+                // Mostrar o fator diário do saldo não vencido (taxa normal)
+                let dailyFactor = '-';
+                if (day.dailyRateNormal > 0) {
+                    dailyFactor = (day.dailyRateNormal * 100).toFixed(2) + '%';
+                }
+
+                // Se stop accrual, zerar juros nas colunas
+                const isStopAccrual = day.status === 'Stop Accrual';
+                const displayDailyInterestOverdue = isStopAccrual ? 0 : day.dailyInterestOverdue;
+                const displayTotalInterestOverdue = isStopAccrual ? 0 : day.totalInterestOverdue;
+                const totalOverdueWithInterest = day.balanceOverdue + (isStopAccrual ? 0 : day.totalInterestOverdue);
+                
+                row.innerHTML = `
+                    <td>${day.date.toLocaleDateString('pt-BR')}</td>
+                    <td>${dailyFactor}</td>
+                    <td>R$ ${day.balanceNormal.toFixed(2)}</td>
+                    <td>R$ ${day.dailyInterestNormal.toFixed(2)}</td>
+                    <td>R$ ${totalOverdueWithInterest.toFixed(2)}</td>
+                    <td>R$ ${displayDailyInterestOverdue.toFixed(2)}</td>
+                    <td>R$ ${displayTotalInterestOverdue.toFixed(2)}</td>
+                    <td>R$ ${day.totalLateFees.toFixed(2)}</td>
+                    <td>${day.payment > 0 ? 'R$ ' + day.payment.toFixed(2) : '-'}</td>
+                    <td>${day.daysOverdue > 0 ? day.daysOverdue + (isStopAccrual ? ' ⚠️' : '') : '-'}</td>
+                `;
+                resultsBody.appendChild(row);
+            });
+
+            resultsSection.style.display = 'block';
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+            
+            // Mostrar botão de download
+            document.getElementById('downloadBtn').style.display = 'inline-block';
+        }
+
+        function downloadCSV() {
+            if (!calculatedData || calculatedData.length === 0) {
+                alert('Por favor, calcule os juros primeiro!');
+                return;
+            }
+
+            // Criar cabeçalho do CSV
+            const headers = [
+                'Data',
+                'Fator Diário (NV)',
+                'Saldo Não Vencido',
+                'Juros Dia (NV)',
+                'Saldo Vencido + Juros',
+                'Juros Dia (V)',
+                'Juros Acumulados (V)',
+                'Multa Acumulada',
+                'Pagamento',
+                'Dias Atraso',
+                'Status'
+            ];
+
+            // Criar linhas do CSV
+            const rows = calculatedData.map(day => {
+                let dailyFactor = '-';
+                if (day.dailyRateNormal > 0) {
+                    dailyFactor = (day.dailyRateNormal * 100).toFixed(4);
+                }
+
+                // Se stop accrual, zerar juros nas colunas
+                const isStopAccrual = day.status === 'Stop Accrual';
+                const displayDailyInterestOverdue = isStopAccrual ? 0 : day.dailyInterestOverdue;
+                const displayTotalInterestOverdue = isStopAccrual ? 0 : day.totalInterestOverdue;
+                const totalOverdueWithInterest = day.balanceOverdue + (isStopAccrual ? 0 : day.totalInterestOverdue);
+
+                return [
+                    day.date.toLocaleDateString('pt-BR'),
+                    dailyFactor,
+                    day.balanceNormal.toFixed(2),
+                    day.dailyInterestNormal.toFixed(2),
+                    totalOverdueWithInterest.toFixed(2),
+                    displayDailyInterestOverdue.toFixed(2),
+                    displayTotalInterestOverdue.toFixed(2),
+                    day.totalLateFees.toFixed(2),
+                    day.payment > 0 ? day.payment.toFixed(2) : '0.00',
+                    day.daysOverdue > 0 ? day.daysOverdue : '0',
+                    day.status
+                ].join(';');
+            });
+
+            // Combinar cabeçalho e linhas
+            const csv = [headers.join(';'), ...rows].join('\n');
+
+            // Criar blob e fazer download
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'calculo_juros_stop_accrual.csv');
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Gerar cronograma de pagamentos ao carregar
+        window.addEventListener('DOMContentLoaded', () => {
+            // Gerar cronograma automaticamente
+            generatePaymentSchedule();
+            
+            // Pré-preencher alguns pagamentos de exemplo
+            setTimeout(() => {
+                // Primeira parcela: paga no vencimento
+                document.getElementById('paymentStatus-1').value = 'paid-on-time';
+                updatePaymentStatus(1);
+                
+                // Segunda parcela: paga no vencimento
+                document.getElementById('paymentStatus-2').value = 'paid-on-time';
+                updatePaymentStatus(2);
+                
+                // Terceira parcela: paga em atraso
+                document.getElementById('paymentStatus-3').value = 'paid-late';
+                updatePaymentStatus(3);
+                document.getElementById('latePaymentDate-3').value = '2024-08-08';
+                
+                // Sexta parcela: paga em atraso
+                document.getElementById('paymentStatus-6').value = 'paid-late';
+                updatePaymentStatus(6);
+                document.getElementById('latePaymentDate-6').value = '2025-01-20';
+                
+                // Sétima parcela: paga em atraso
+                document.getElementById('paymentStatus-7').value = 'paid-late';
+                updatePaymentStatus(7);
+                document.getElementById('latePaymentDate-7').value = '2025-02-19';
+            }, 100);
+        });
+    </script>
+</body>
+</html>
