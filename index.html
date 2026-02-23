@@ -622,26 +622,8 @@
                     <p>
                         Conforme a <a href="https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o%20CMN&numero=4966" target="_blank">Resolução CMN nº 4966</a>, 
                         os juros são acumulados apenas até 90 dias de atraso no pagamento. Após esse período, 
-                        a instituição deve suspender o reconhecimento de receitas de juros (stop accrual). <strong>Quando atingido o stop accrual, 
-                        as colunas de juros são zeradas (Juros Dia V, Juros Acum. V e Saldo Vencido + Juros mostram apenas o principal).</strong>
-                    </p>
-                    <p style="margin-top: 10px;">
-                        <strong>Regras implementadas:</strong><br>
-                        • <strong>Ordem de Cálculo Diário:</strong> 1) Juros sobre saldo, 2) Vencimento de parcelas, 3) Aplicação de pagamentos<br>
-                        • <strong>Juros Compostos:</strong> Novo Saldo = Saldo Anterior × (1 + Fator Diário)<br>
-                        • <strong>Fator Diário:</strong> ((1 + Taxa Mensal)^(1/Dias do Mês Referência) - 1)<br>
-                        • <strong>Mês de Referência:</strong> Usa o mês ANTERIOR ao próximo vencimento<br>
-                        • <strong>Fim de Semana:</strong> Se vencimento cai em FDS, fator só muda no próximo dia útil<br>
-                        • Exemplo: 09/05 a 07/06 usa maio (31d=0.31%). 08/06 a 07/07 usa junho (30d=0.32%). 08/07 a 07/08 usa julho (31d=0.31%). 08/08 a 07/09 usa agosto (31d=0.31%)<br>
-                        • Exemplo FDS: 07/07 (domingo) vence, usa junho até 07/07. Em 08/07 (segunda) muda para julho<br>
-                        • <strong>Datas de Vencimento:</strong> Sempre no dia especificado (ex: dia 7 de cada mês, mesmo que seja FDS)<br>
-                        • <strong>Juros de Atraso:</strong> Taxa aumenta 1% no dia SEGUINTE ao vencimento (07/06 vence, 08/06 começa juros de atraso)<br>
-                        • Multa de 2% só se NÃO pagar no vencimento<br>
-                        • <strong>Cronograma de Pagamentos:</strong> Gerado automaticamente com opções: Pago no Vencimento, Pago em Atraso, Não Pago<br>
-                        • Pagamentos calculados automaticamente: PMT (se no vencimento) ou PMT + juros + multa (se em atraso)<br>
-                        • Ordem de abatimento: multa, juros acumulados, principal<br>
-                        • Stop accrual aplicado após 90 dias de atraso OU na data externa informada (colunas de juros zeradas na exibição)<br>
-                        • <strong>Data de Stop Accrual Externa:</strong> Use quando outro loan do cliente já atingiu stop accrual. Esta data será aplicada mesmo antes de 90 dias
+                        a instituição deve suspender o reconhecimento de receitas de juros (stop accrual). Quando atingido o stop accrual, 
+                        as colunas de juros são zeradas (Juros Dia V, Juros Acum. V e Saldo Vencido + Juros mostram apenas o principal).
                     </p>
                 </div>
             </div>
