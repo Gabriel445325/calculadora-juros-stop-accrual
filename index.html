@@ -1497,7 +1497,7 @@
                 <div class="summary-card ${hasFilter ? 'dimmed' : ''}">
                     <h3>Juros de Atraso até Stop Accrual</h3>
                     <div class="value">R$ ${interestUntilStopAccrual.toFixed(2)}</div>
-                    <small style="opacity: 0.8; font-size: 11px;">Total de juros acumulados até o início do stop accrual. Equivalente a book account de profit_and_loss__late_interest.</small>
+                    <small style="opacity: 0.8; font-size: 11px;">Equivalente a book account de profit_and_loss__late_interest.</small>
                 </div>
                 <div class="summary-card ${hasFilter ? 'dimmed' : ''}">
                     <h3>Total de Pagamentos</h3>
@@ -1511,7 +1511,7 @@
                 <div class="summary-card ${hasFilter ? 'dimmed' : ''}">
                     <h3>Multas Acumuladas</h3>
                     <div class="value">R$ ${lastDayComplete.totalLateFees.toFixed(2)}</div>
-                    <small style="opacity: 0.8; font-size: 11px;">Total: R$ ${lastDayComplete.totalLateFees.toFixed(2)} | Até Stop Accrual: R$ ${lateFeesUntilStopAccrual.toFixed(2)}. Equivalente a book account de profit_and_loss__late_fee.</small>
+                    <small style="opacity: 0.8; font-size: 11px;">Total: R$ ${lastDayComplete.totalLateFees.toFixed(2)} | Até Stop Accrual: R$ ${lateFeesUntilStopAccrual.toFixed(2)}</small><br><small style="opacity: 0.8; font-size: 11px;">Equivalente a book account de profit_and_loss__late_fee.</small>
                 </div>
                 <div class="summary-card ${hasFilter ? 'dimmed' : ''}">
                     <h3>Data do Stop Accrual</h3>
@@ -1520,7 +1520,7 @@
                 <div class="summary-card ${hasFilter ? 'dimmed' : ''}">
                     <h3>Juros até Stop Accrual (Não Vencidas)</h3>
                     <div class="value">R$ ${normalInterestUntilStopAccrual.toFixed(2)}</div>
-                    <small style="opacity: 0.8; font-size: 11px;">Juros não vencidos acumulados até a data de stop accrual. Equivalente a book account de profit_and_loss__interest_revenue.</small>
+                    <small style="opacity: 0.8; font-size: 11px;">Equivalente a book account de profit_and_loss__interest_revenue.</small>
                 </div>
                 ${hasFilter && periodInterest > 0 ? `
                 <div class="summary-card period-filter-card">
